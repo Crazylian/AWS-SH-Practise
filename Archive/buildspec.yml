@@ -1,0 +1,50 @@
+version: 0.2
+phases:
+  install:
+    runtime-versions:
+      nodejs: 20
+    commands:
+      - echo "===== Start Build =====";
+      - REPOSITORY_URI=860442601672.dkr.ecr.us-east-1.amazonaws.com/pureweb
+      - CODEBUILD_BUILD_NUMBER=latest
+  pre_build:
+    commands:
+      # we are root path of code repository, install env dependecy
+      - echo $(ls)
+      # login aws ecr
+      - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 860442601672.dkr.ecr.us-east-1.amazonaws.com
+      - aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws
+  build:
+    commands:
+      #start build
+      - echo "===========================run install==========================="
+      - npm config set package-lock false
+      - npm install
+      - echo "project installed..."
+
+      # unit test, mocha or ....
+      - npm test
+      # build docker
+      - docker build -t pureweb .
+      - docker tag pureweb:latest $REPOSITORY_URI:$CODEBUILD_BUILD_NUMBER
+  post_build:
+    commands:
+      - docker push $REPOSITORY_URI:$CODEBUILD_BUILD_NUMBER
+      - printf '[{"name":"container-pureweb","imageUri":"%s"}]' $REPOSITORY_URI:$CODEBUILD_BUILD_NUMBER > imagedefinitions.json
+      - cat imagedefinitions.json
+      - printf '{"ImageURI":"%s"}' $REPOSITORY_URI:$CODEBUILD_BUILD_NUMBER > imageDetail.json
+      - cat imageDetail.json
+artifacts:
+  files:
+    - imageDetail.json
+    - appspec.yaml
+    - taskdef.json
+    - imagedefinitions.json
+  secondary-artifacts:
+    DefinitionArtifact:
+      files:
+        - appspec.yaml
+        - taskdef.json
+    ImageArtifact:
+      files:
+        - imageDetail.json

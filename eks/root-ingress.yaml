@@ -1,0 +1,17 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: my-ingress
+  namespace: <your-namespace>
+spec:
+  rules:
+  - host: <your-app-name>.<your-domain>.nip.io  # 使用 nip.io 或自己的域名
+    http:
+      paths:
+      - path: /path1
+        pathType: Prefix
+        backend:
+          service:
+            name: service1
+            port:
+              number: 80

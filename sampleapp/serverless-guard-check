@@ -1,0 +1,22 @@
+let aws_serverless_simpletable_resources = Resources.*[ Type == 'AWS::Serverless::SimpleTable' ]
+rule aws_serverless_simpletable when %aws_serverless_simpletable_resources !empty {
+  %aws_serverless_simpletable_resources.Properties.PrimaryKey == {"Name":"id","Type":"String"}
+}
+
+let aws_logs_loggroup_resources = Resources.*[ Type == 'AWS::Logs::LogGroup' ]
+rule aws_logs_loggroup when %aws_logs_loggroup_resources !empty {
+  %aws_logs_loggroup_resources.Properties.LogGroupName.'Fn::Sub' IN ["/aws/lambda/${getAllItemsFunction}", "/aws/lambda/${getByIdFunction}", "/aws/lambda/${putItemFunction}", "/aws/apigateway/${Api}"]
+  %aws_logs_loggroup_resources.Properties.RetentionInDays == 7
+}
+
+let aws_serverless_api_resources = Resources.*[ Type == 'AWS::Serverless::Api' ]
+rule aws_serverless_api when %aws_serverless_api_resources !empty {
+  %aws_serverless_api_resources.Properties.StageName == "Prod"
+  %aws_serverless_api_resources.Properties.TracingEnabled == true
+}
+
+let aws_serverless_function_resources = Resources.*[ Type == 'AWS::Serverless::Function' ]
+rule aws_serverless_function when %aws_serverless_function_resources !empty {
+ %aws_serverless_function_resources.Properties.Handler IN ["src/get-by-id.getByIdHandler", "src/get-all-items.getAllItemsHandler", "src/put-item.putItemHandler"]
+}  
+

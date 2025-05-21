@@ -1,0 +1,33 @@
+version: 0.2
+env:
+  shell: bash
+  variables:
+    CF_ORG_RULESET:  "serverless-guard-check"
+phases:
+  install:
+    runtime-versions:
+      nodejs: latest
+    commands:
+      - pip install --upgrade aws-sam-cli
+      # To install cfn-guard
+      - curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs -o rustup.sh
+      - chmod 755 rustup.sh
+      - ./rustup.sh -y
+      - source $HOME/.cargo/env
+      - cargo install cfn-guard
+      - aws configure set region $AWS_DEFAULT_REGION
+     
+  build:
+    commands:
+      - export SAM_CLI_TELEMETRY=0
+      - cd ${CODEBUILD_SRC_DIR}
+      - npm install
+      - sam package --template-file application.yaml --s3-bucket $InfraBucket --output-template-file InfraDeployment.yml 
+      # Validate CFN template using cfn-guard
+      - cfn-guard validate -d InfraDeployment.yml -r $CF_ORG_RULESET -S all 
+
+
+artifacts:
+    files: 
+      - InfraDeployment.yml
+      - InfraDeployment.config

@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ws-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: root-server
+  template:
+    metadata:
+      labels:
+        app: root-server
+    spec:
+      serviceAccountName: root-sa
+      containers:
+        - name: root-server
+          image: 867344445859.dkr.ecr.us-east-1.amazonaws.com/root-server:latest
+          ports:
+          - containerPort: 80

@@ -1,0 +1,161 @@
+openapi: 3.0.0
+info:
+    title: Kubernetes cluster access controls.
+    version: 1.0.0
+    description: API for creating access entry controls for EKS Cluster and providing IAM access for kubernetes resources through Service Accounts and Pod Identity.
+paths:
+    /createAccessEntry:
+        post:
+            summary: API to create access entry in EKS.
+            description: Create access entry for EKS Cluster for an IAM user or IAM role entered by the user. This API should be called every time the user wants to give access for an IAM principal to the EKS cluster by creating an access entry.
+            operationId: createAccessEntry
+            requestBody:
+              required: true
+              content:
+                application/json:
+                  schema:
+                    type: object
+                    properties:
+                      clusterName:
+                        type: string
+                        description: Name of the EKS cluster to create EKS access entry for.
+                      principalArn:
+                        type: string
+                        description: The ARN of the IAM principal to create as an EKS access entry.
+                    required:
+                      - clusterName
+                      - principalArn
+
+            responses:
+                '200':
+                    description: Successfully created EKS access entry.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Object of access entry created along with the respective access policy.
+                                properties:
+                                  accessEntryArn:
+                                    type: string
+                                    description: Message saying if it was successfully created or not.
+                                  accessPolicy:
+                                    type: string
+                                    description: Message saying if it was successfully attached or not.
+
+                '400':
+                    description: Bad request. One or more required fields are missing or invalid.
+
+    /describeAccessEntry:
+        post:
+            summary: API to describe an access entry and the associated access policies for it in EKS.
+            description: Describe the user entered EKS Access Entry ARN by showing which EKS Access policies are attached to which namespaces for it in the EKS Cluster.
+            operationId: DescribeAccessEntry
+            requestBody:
+              required: true
+              content:
+                application/json:
+                  schema:
+                    type: object
+                    properties:
+                      clusterName:
+                        type: string
+                        description: Name of the EKS cluster to describe EKS access entry for.
+                      principalArn:
+                        type: string
+                        description: The ARN of the access entry to describe from the EKS cluster.
+                    required:
+                      - clusterName
+                      - principalArn
+
+            responses:
+                '200':
+                    description: Successfully described the access policies attached to an EKS Access entry.
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                description: Array showing the properties of each EKS Access policy attached to the access entry.
+                                items:
+                                  type: object
+                                  description: Object of the individual associated EKS Access policies showing their ARN and the access scope.
+                                  properties:
+                                    policyArn:
+                                      type: string
+                                      description: The ARN of the individual EKS Access Policy.
+                                    accessScope:
+                                      type: object
+                                      description: Object showing the scope of the EKS Access policy.
+                                      properties:
+                                        type:
+                                          type: string
+                                          description: Access scope being cluster level or namespace level.
+                                        namespaces:
+                                          type: string
+                                          description: List of namespaces if the access scope is namespace level.
+
+                '400':
+                    description: Bad request. One or more required fields are missing or invalid.
+
+    /updateRolePodIdentity:
+        post:
+            summary: API to update the assume role policy for the given IAM role arn to make it compatible with pod identity association.
+            description: Update assume role policy for the entered IAM role arn to make it compatible with pod identity association. This API should be called every time the user wants to give an IAM role to be assumed by the EKS cluster through pod identity association.
+            operationId: updateRolePodIdentity
+            requestBody:
+              required: true
+              content:
+                application/json:
+                  schema:
+                    type: object
+                    properties:
+                      roleArn:
+                        type: string
+                        description: The ARN of the IAM principal to create as pod identity association.
+                    required:
+                      - roleArn
+            responses:
+                '200':
+                    description: Successfully updated the assume role policy for the given IAM role arn to make it compatible with pod identity association.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Object of IAM role arn.
+                                properties:
+                                  roleArn:
+                                    type: string
+                                    description: The value of the IAM Role ARN for which the assume role policy has been updated.
+                '400':
+                    description: Bad request. One or more required fields are missing or invalid.
+
+    /deleteAccessEntry:
+        post:
+            summary: API to delete access entry in EKS.
+            description: delete access entry for EKS Cluster for an IAM user or IAM role entered by the user. This API should be called every time the user wants to remove access for an IAM principal to the EKS cluster by delete an access entry.
+            operationId: deleteAccessEntry
+            requestBody:
+              required: true
+              content:
+                application/json:
+                  schema:
+                    type: object
+                    properties:
+                      clusterName:
+                        type: string
+                        description: Name of the EKS cluster to create EKS access entry for.
+                      principalArn:
+                        type: string
+                        description: The ARN of the IAM principal to create as an EKS access entry.
+                    required:
+                      - clusterName
+                      - principalArn
+            responses:
+                '200':
+                    description: Successfully delete EKS access entry.
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                description: Object of access entry deleted.
+                '400':
+                    description: Bad request. One or more required fields are missing or invalid.

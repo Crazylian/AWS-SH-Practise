@@ -1,0 +1,34 @@
+version: 0.2
+
+phases:
+  build:
+    commands:
+      - |
+        cat > server.sh <<-EOF
+        #!/bin/bash
+        kill -9 \$(netstat -nlp | grep 8082 | awk '{print \$7}' | awk -F'/' '{print \$1}')
+        echo {\"server_port\":8082} > /Webapp/config.json
+        cd /Webapp
+        ./server1 > output.log 2>&1 & 
+        EOF
+        chmod +x server.sh
+  post_build:
+    commands: 
+      - |
+        cat > appspec.yml <<-EOF
+        version: 0.0
+        os: linux
+        files:
+        - source: /
+          destination: /Webapp
+        file_exists_behavior: OVERWRITE
+        hooks:
+          ApplicationStart:
+            - location: server.sh
+              timeout: 15
+        EOF
+artifacts:
+  files:
+    - server.sh
+    - appspec.yml
+    - '**/*'

@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ws-server
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ws-server
+  template:
+    metadata:
+      labels:
+        app: ws-server
+    spec:
+      serviceAccountName: ws-server-sa
+      containers:
+        - name: ws-server
+          image: <your_ecr_image_url>
+          env:
+            - name: APPCONFIG_APP_ID
+              value: "zqtgawm"
+            - name: APPCONFIG_ENV_ID
+              value: "vm7zu9t"
+            - name: APPCONFIG_PROFILE_ID
+              value: "bph61ga"
+          ports:
+            - containerPort: 8080 # 如果你在 AppConfig 里用 3000，就改成 3000

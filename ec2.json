@@ -1,0 +1,26 @@
+{
+    "Resources": {
+        "Ec2Instance": {
+            "Type": "AWS::EC2::Instance",
+            "Properties": {
+                "ImageId": "ami-00a929b66ed6e0",
+                "InstanceType": "t2.micro",
+                "NetworkInterfaces": [
+                    {
+                        "AssociatePublicIpAddress": "true",
+                        "DeviceIndex": "0",
+                        "SubnetId": "subnet-0a5ed0470b8a5dac0",
+                        "GroupSet": [
+                            "sg-0a7aaabc2210857bf"
+                        ]
+                    }
+                ],
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Sub": "#!/bin/bash\nsed 's/PasswordAuthentication no/PasswordAuthentication yes/' -i /etc/ssh/sshd_config\nsystemctl restart sshd\nservice sshd restart\necho 'password123' | passwd --stdin ec2-user\n"
+                    }
+                }
+            }
+        }
+    }
+}

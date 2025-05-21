@@ -1,0 +1,31 @@
+version: 0.2
+phases:
+  install:
+    commands:
+      - echo "===== Start Build =====";
+      - REPOSITORY_URI=907591394880.dkr.ecr.us-east-1.amazonaws.com/server
+      - CODEBUILD_BUILD_NUMBER=root
+  pre_build:
+    commands:
+      # we are root path of code repository, install env dependecy
+      - echo $(ls)
+      # login aws ecr
+      - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 907591394880.dkr.ecr.us-east-1.amazonaws.com
+      - aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws
+  build:
+    commands:
+      #start build
+      - echo "===========================run install==========================="
+      - mv server-root.ini server.ini
+      - chmod +x ws-ec2-root
+      - docker build -t server:root .
+      - docker tag server:root $REPOSITORY_URI:$CODEBUILD_BUILD_NUMBER
+  post_build:
+    commands:
+      - docker push $REPOSITORY_URI:$CODEBUILD_BUILD_NUMBER
+      - printf '[{"name":"root","imageUri":"%s"}]' $REPOSITORY_URI:$CODEBUILD_BUILD_NUMBER > imagedefinitions.json
+      - cat imagedefinitions.json
+
+artifacts:
+  files:
+    - imagedefinitions.json
